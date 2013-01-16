@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "P2PBR",
+    "description": "Application name."
+  },
+  "extDesc": {
+    "message": "Access the Free Web with Peer-to-Peer Bridge Routing",
+    "description": "Application description."
+  }
+}

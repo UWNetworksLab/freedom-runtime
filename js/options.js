@@ -23,6 +23,7 @@ var setupWebview = function() {
 };
 
 var injectWebview = function(code) {
+  var codeWrapper = "localStorage['program'] = \"" + code + "\";reload();";
   var webview = document.getElementById('portal');
   webview.executeScript({
     'code': code

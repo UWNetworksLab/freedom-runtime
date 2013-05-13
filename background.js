@@ -1,8 +1,10 @@
 function registerRules() {
-  var injection = chrome.extension.getURL("js/inject.js");
+  var injectScript = chrome.extension.getURL("js/inject.js");
   var rule = {
     priority: 100,
     conditions: [
+      // 127/24 is loopback space, so DNS won't be contacted to resolve.
+      // 56.247.118 == 3733366 == 'freedom' on a phone ;)
       new chrome.declarativeWebRequest.RequestMatcher({
         url: {hostEquals: '127.3733366'}
       }),
@@ -12,7 +14,7 @@ function registerRules() {
     ],
     actions: [
       new chrome.declarativeWebRequest.RedirectRequest({
-        redirectUrl: injection
+        redirectUrl: injectScript
       })
     ]
   };

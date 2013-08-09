@@ -3,17 +3,18 @@
   "name": "__MSG_extName__",
   "description": "__MSG_extDesc__",
   "version": "0.1.0",
-  "browser_action": {
-    "default_popup": "popup.html"
-  },
   "default_locale": "en",
   "icons": {
       "128":"icon-128.png"
   },
-  "background": {
-    "persistent": false,
-    "scripts": ["background.js"]
+  "app": {
+    "background": {
+      "scripts": ["js/background.js"]
+    }
   },
-  "permissions": ["declarativeWebRequest", "idle", "storage", "tabs", "proxy", "<all_urls>"],
-  "web_accessible_resources": ["js/inject.js"]
+  "permissions": [
+    "idle", 
+    "storage",
+    {"socket": ["tcp-connect", "tcp-listen"]}
+  ]
 }

@@ -1,3 +1,8 @@
+var window;
+if (!window) {
+  window = {};
+}
+window.socket = promise2callback(freedom['core.socket']());
 /*
 Copyright 2013 Google Inc.
 
@@ -53,8 +58,7 @@ function getStringOfArrayBuffer(buf) {
   var DEFAULT_MAX_CONNECTIONS = 50;
 
   // Define some local variables here.
-  var socket = socket || (typeof window != 'undefined' && window.socket) || 
-    (typeof chrome != 'undefined' && chrome.socket);
+  var socket = window.socket || (typeof chrome != 'undefined' && chrome.socket);
 
   /**
    * Create an instance of the server
@@ -166,17 +170,20 @@ function getStringOfArrayBuffer(buf) {
    * @see http://developer.chrome.com/trunk/apps/socket.html#method-disconnect
    */
   TcpServer.prototype.disconnect = function() {
-    if (this.serverSocketId) socket.disconnect(this.serverSocketId);
+    if (this.serverSocketId) {
+      socket.disconnect(this.serverSocketId);
+      socket.destroy(this.serverSocketId);
+    }
     for (var i in this.openConnections) {
       try {
         this.openConnections[i].disconnect();
         this.removeFromServer(this.openConnections[i]);
       } catch (ex) {
-        console.warn(ex);
+        console.log(ex);
       }
     }
-    socket.disconnect(serverSocketId);
-    socket.destory(serverSocketId);
+    //socket.disconnect(serverSocketId);
+    //socket.destroy(serverSocketId);
     this.serverSocketId = 0;
     this.isListening = false;
     this.callbacks.disconnect && this.callbacks.disconnect();

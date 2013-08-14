@@ -17,6 +17,8 @@ var Socket_chrome = function(channel) {
 };
 
 Socket_chrome.prototype.destroy = function(socketId, continuation) {
+  console.log("!!!! "+socketId);
+  console.log("!!!! "+continuation);
   if (chrome && chrome.socket) {
     chrome.socket.destroy(socketId);
   }

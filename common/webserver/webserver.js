@@ -1,5 +1,7 @@
-var window = {};
-window.socket = promise2callback(freedom['core.socket']());
+var window;
+if (!window) {
+  window = {};
+}
 
 function parseGet(str) {
   var lines = str.split('\r\n');

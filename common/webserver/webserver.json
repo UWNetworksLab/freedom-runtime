@@ -1,0 +1,12 @@
+{
+  "name": "Web Server",
+  "description": "Simple Web Server",
+  "app": {
+    "script": ["../util.js", "tcp-server.js", "webserver.js"]
+  },
+  "dependencies": {
+  },
+  "permissions": [
+    "core.socket"
+  ]
+}

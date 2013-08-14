@@ -9,7 +9,7 @@
   },
   "app": {
     "background": {
-      "scripts": ["js/background.js"]
+      "scripts": ["js/socket_chrome.js", "js/background.js"]
     }
   },
   "permissions": [

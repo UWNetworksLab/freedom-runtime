@@ -1,0 +1,12 @@
+{
+  "name": "FreeDOM Manager",
+  "description": "FreeDOM manager provides an interface between your apps and your devices.",
+  "app": {
+    "script": "manager.js"
+  },
+  "dependencies": {
+    "webserver": "common/webserver/webserver.json"
+  },
+  "permissions": [
+  ]
+}

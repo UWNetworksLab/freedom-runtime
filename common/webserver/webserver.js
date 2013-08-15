@@ -39,9 +39,9 @@ function Server(address, port) {
                       //"Sec-WebSocket-Protocol: chat\r\n"+
                       "Sec-WebSocket-Accept: "+wsAccept+"\r\n\r\n";
         connection.send(header);
-        connection.send("POOP TEST");
       } else {
         console.log(reqStr);
+        connection.send("POOP TEST");
       }
     }).bind(this));
   }).bind(this));

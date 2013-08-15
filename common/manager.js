@@ -10,5 +10,5 @@ var onload = function() {
 onload();
 //Autostop the server
 setTimeout(function() {
-  webserver.emit('stop', '');
+//  webserver.emit('stop', '');
 }, 10000)

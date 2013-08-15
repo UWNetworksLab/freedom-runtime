@@ -427,7 +427,7 @@ function getStringOfArrayBuffer(buf) {
   TcpConnection.prototype._onRead = function(readInfo) {
     // if we are disconnected, do nothing and stop reading.
     if (readInfo.resultCode < 0) {
-      console.warn('TcpConnection('+this.socketId+'): resultCode: '+readInfo.resultCode+'. Disconnecting');
+      console.log('TcpConnection('+this.socketId+'): resultCode: '+readInfo.resultCode+'. Disconnecting');
       this.disconnect();
       return;
     } else if (readInfo.resultCode == 0) {

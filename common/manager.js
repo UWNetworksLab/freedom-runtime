@@ -11,4 +11,4 @@ onload();
 //Autostop the server
 setTimeout(function() {
   webserver.emit('stop', '');
-}, 1000)
+}, 10000)

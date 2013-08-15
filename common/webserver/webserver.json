@@ -2,7 +2,7 @@
   "name": "Web Server",
   "description": "Simple Web Server",
   "app": {
-    "script": ["../util.js", "tcp-server.js", "webserver.js"]
+    "script": ["../misc/sha1.js", "../misc/enc-base64-min.js", "../misc/util.js", "tcp-server.js", "webserver.js"]
   },
   "dependencies": {
   },

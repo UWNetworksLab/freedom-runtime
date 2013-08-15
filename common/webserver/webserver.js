@@ -2,17 +2,7 @@ var window;
 if (!window) {
   window = {};
 }
-
-function parseGet(str) {
-  var lines = str.split('\r\n');
-  var req = {}
-  for (var i=1; i<lines.length; i++) {
-    var line = lines[i].split(': ');
-    req[line[0]] = line[1];
-  }
-  req.cmd = lines[0];
-  return req;
-}
+var WebSocketMagic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 function sendStub(connection) {
   var xhr = new XMLHttpRequest();
@@ -23,30 +13,9 @@ function sendStub(connection) {
   };
   xhr.open('GET', 'chrome-extension://pekedacphdgiplmopeaplpdndakdefll/common/webserver/stub.js', true);
   xhr.send(null);
-/**
-  var contentLength = file.size;
-  var header = stringToUint8Array("HTTP/1.0 200 OK\r\nContent-length: " + file.size + 
-    "\r\nContent-type: text/javascript\n\n");
-  var outputBuffer = new ArrayBuffer(header.byteLength + file.size);
-  var view = new Uint8Array(outputBuffer)
-  view.set(header, 0);
-  var fileReader = new FileReader();
-  fileReader.onload = function(e) {
-  view.set(new Uint8Array(e.target.result), header.byteLength);
-  socket.write(socketId, outputBuffer, function(writeInfo) {
-  console.log("WRITE", writeInfo);
-  if (keepAlive) {
-  readFromSocket(socketId);
-  } else {
-  socket.destroy(socketId);
-  socket.accept(socketInfo.socketId, onAccept);
-  }
-  });
-  };
-  **/
 }
 
-function HttpServer(address, port) {
+function Server(address, port) {
   window.current = this;
   this.tcpServer = new window.TcpServer(address || '127.0.0.1', port || 9009);
   this.tcpServer.on('listening', (function() {
@@ -55,42 +24,61 @@ function HttpServer(address, port) {
   this.tcpServer.on('disconnect', function() {
     console.log('SERVER STOP');
   });
-  this.tcpServer.on('connection', function(connection) {
+  this.tcpServer.on('connection', (function(connection) {
     console.log('CONNECTED('+connection.socketId+') '+connection.socketInfo.peerAddress+':'+connection.socketInfo.peerPort);
-    connection.on('recv', function(buffer) {
+    connection.on('recv', (function(buffer) {
       console.log('Socket '+connection.socketId+' got data');
-      var req = parseGet(getStringOfArrayBuffer(buffer));
-      console.log(JSON.stringify(req));
-      if (req['Connection'] && req['Connection']=='Upgrade' && req['Upgrade'] && req['Upgrade'] == 'websocket') {
-        console.log('Websocket Handshake');
+      var reqStr = getStringOfArrayBuffer(buffer);
+      var req = this.parseGet(reqStr);
+      if (req['Connection'] && req['Connection']=='Upgrade' && 
+          req['Upgrade'] && req['Upgrade'] == 'websocket' && 
+          req['Sec-WebSocket-Key']) {
+        var wsKey = req['Sec-WebSocket-Key']+WebSocketMagic;
+        var wsAccept = CryptoJS.SHA1(wsKey).toString(CryptoJS.enc.Base64);
+        var header = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"+
+                      //"Sec-WebSocket-Protocol: chat\r\n"+
+                      "Sec-WebSocket-Accept: "+wsAccept+"\r\n\r\n";
+        connection.send(header);
+        connection.send("POOP TEST");
       } else {
-        sendStub(connection);
+        console.log(reqStr);
       }
-    });
-  });
+    }).bind(this));
+  }).bind(this));
 }
 
-HttpServer.prototype.listen = function() {
+Server.prototype.parseGet = function(str) {
+  var lines = str.split('\r\n');
+  var req = {}
+  for (var i=1; i<lines.length; i++) {
+    var line = lines[i].split(': ');
+    req[line[0]] = line[1];
+  }
+  req.cmd = lines[0];
+  return req;
+};
+
+Server.prototype.listen = function() {
   this.tcpServer.listen();
 };
 
-HttpServer.prototype.disconnect = function() {
+Server.prototype.disconnect = function() {
   this.tcpServer.disconnect();
 };
 
 var onload = function() {
-  var http = null;
+  var server = null;
 
   freedom.on('start', function(options) {
-    if (!http) {
-      http = new HttpServer(options.host, options.port);
-      http.listen();
+    if (!server) {
+      server = new Server(options.host, options.port);
+      server.listen();
     }
   });
   freedom.on('stop', function(data) {
-    if (http) {
-      http.disconnect();
-      http = null;
+    if (server) {
+      server.disconnect();
+      server = null;
     }
   });
 

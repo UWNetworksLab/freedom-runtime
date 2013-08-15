@@ -8,7 +8,7 @@ window.freedomcfg = function(register) {
 var script = document.createElement('script');
 script.setAttribute('data-manifest', 'common/manager.json');
   // true if in Blobs/WebWorkers, false in frames
-script.textContent = '{"strongIsolation": true}';
+script.textContent = '{"strongIsolation": true, "stayLocal": true}';
 script.src = 'common/freedom/freedom.js';
 document.head.appendChild(script);
 

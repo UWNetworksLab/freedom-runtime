@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 Based on tcp-server.js code by: Renato Mangini (mangini@chromium.org)
+https://github.com/GoogleChrome/chrome-app-samples/tree/master/tcpserver
 */
 'use strict';
+
 
 /**
  * Converts an array buffer to a string of hex codes and interpretations as
@@ -118,7 +120,7 @@ function getStringOfArrayBuffer(buf) {
    * preferred network as the addr parameter on TcpServer contructor.
    */
   TcpServer.getNetworkAddresses = function(callback) {
-    socket.getNetworkList(callback);
+    socket.getNetworkList().done(callback);
   };
 
   /**
@@ -156,7 +158,7 @@ function getStringOfArrayBuffer(buf) {
    * @param {Function} callback The function to call on connection.
    */
   TcpServer.prototype.listen = function() {
-    socket.create('tcp', {}, this._onCreate.bind(this));
+    socket.create('tcp', {}).done(this._onCreate.bind(this));
   };
 
   /**
@@ -195,8 +197,9 @@ function getStringOfArrayBuffer(buf) {
   TcpServer.prototype._onCreate = function(createInfo) {
     this.serverSocketId = createInfo.socketId;
     if (this.serverSocketId > 0) {
-      socket.listen(this.serverSocketId, this.addr, this.port, null,
-        this._onListenComplete.bind(this));
+      console.log(JSON.stringify([this.serverSocketId, this.addr, this.port]));
+      socket.listen(this.serverSocketId, this.addr, this.port)
+	.done(this._onListenComplete.bind(this));
       this.isListening = true;
     } else {
       console.error('TcpServer: create socket failed for %s:%d',
@@ -213,66 +216,48 @@ function getStringOfArrayBuffer(buf) {
    */
   TcpServer.prototype._onListenComplete = function(resultCode) {
     if (resultCode === 0) {
-      socket.accept(this.serverSocketId, this._onAccept.bind(this));
+
+      socket.on('onConnection', function accept(acceptValue) {
+	if (this.serverSocketId !== acceptValue.serverSocketId) {
+	  return;
+	}
+
+	var connectionsCount = Object.keys(this.openConnections).length;
+	if (connectionsCount >= this.maxConnections) {
+          socket.disconnect(acceptValue.clientSocketId);
+          socket.destroy(acceptValue.clientSocketId);
+          console.warn('TcpServer: too many connections: ' + connectionsCount);
+          return;
+      } 
+	this._createTcpConnection(acceptValue.clientSocketId);
+      }.bind(this));
+      
       this.callbacks.listening && this.callbacks.listening();
     } else {
-      console.error('TcpServer: accept failed for %s:%d. Resultcode=%d',
-          this.addr, this.port, resultCode);
-    }
-  };
-
-  TcpServer.prototype._onAccept = function(resultInfo) {
-    // continue to accept more connections:
-    socket.accept(this.serverSocketId, this._onAccept.bind(this));
-    var connectionsCount = Object.keys(this.openConnections).length;
-    console.log('TcpServer: this.openConnections.length=' + connectionsCount);
-
-    if (resultInfo.resultCode === 0) {
-      if (connectionsCount >= this.maxConnections) {
-        socket.disconnect(resultInfo.socketId);
-        socket.destroy(resultInfo.socketId);
-        console.warn('TcpServer: too many connections: ' + connectionsCount);
-        // TODO: make a callback for this case.
-        //this._onNoMoreConnectionsAvailable(resultInfo.socketId);
-        return;
-      }
-      //
-      this._createTcpConnection(resultInfo.socketId);
-      console.log('TcpServer: Incoming connection created.');
-    } else {
-      console.error('TcpServer: Incoming connection failure: ' +
-          resultInfo.resultCode);
+      console.error('TcpServer: listen failed for %s:%d. Resultcode=%d',
+		    this.addr, this.port, resultCode);
     }
   };
 
   TcpServer.prototype._createTcpConnection = function(socketId) {
-    // Get info about the socket to create the TcpConnection.
-    var self = this;
-    socket.getInfo(socketId,
-      function(socketInfo) {
-        var tcpConnection = new TcpConnection(socketId, socketInfo,
-                                              self.connectionCallbacks);
-        // Connection has been established, so make the connection callback.
-        if (self.callbacks.connection) {
-          self.callbacks.connection(tcpConnection);
-        }
-        console.log('TcpServer: client connected.');
-    });
+    new TcpConnection(socketId, this.callbacks.connection,
+		      this.connectionCallbacks);
   };
 
   /**
    * Holds a connection to a client
    *
    * @param {number} socketId The ID of the server<->client socket.
-   * @param {socketInfo} socketInfo
+   * @param {TcpServer.callbacks.connection}  serverConnectionCallback
+   *                                          Called when the new TCP connection is formed and initialized, passing itself as a parameter.
    * @param {TcpServer.connectionCallbacks} callbacks
    */
-  function TcpConnection(socketId, socketInfo, callbacks) {
+  function TcpConnection(socketId, serverConnectionCallback, callbacks) {
     this.socketId = socketId;
-    this.socketInfo = socketInfo;
+    this.socketInfo = null;
     this.callbacks = {};
     this.callbacks.recv = callbacks.recv;
-    this.callbacks.diconnect = callbacks.diconnect;
+    this.callbacks.disconnect = callbacks.disconnect;
     this.callbacks.sent = callbacks.sent;
     this.callbacks.created = callbacks.created;
     this.callbacks.removed = callbacks.removed;
@@ -281,21 +266,23 @@ function getStringOfArrayBuffer(buf) {
     this.recvOptions = null;
     this.pendingRead = false;
     this.callbacks.created(this);
+    // Right now this is only false until the socket has all the information a
+    // user might need (ie socketInfo). The socket shouldn't be doing work for
+    // the user until the internals are ready.
+    // TODO: _initialized is not checked everywhere that it might need to be checked
+    this._initialized = false;
 
-    if(this.callbacks.recv) {
-      console.log('TcpConnection(%d): calling _read from TcpConnection.',
-          this.socketId);
-      this._read();
-    }
+    socket.on('onData', this._onRead.bind(this));
+    socket.getInfo(socketId).done(function(socketInfo) {
+      this.socketInfo = socketInfo;
+      this._initialized = true;
+      // Connection has been established, so make the connection callback.
+      console.log('TcpServer: client connected.');
+      if (serverConnectionCallback) {
+	serverConnectionCallback(this);
+      }
+    }.bind(this));
   };
-
-  /**
-   * start reading data
-   */
-  TcpConnection.prototype._read = function() {
-    socket.read(this.socketId, null, this._onRead.bind(this));
-    this.pendingRead = true;
-  }
 
   /**
    * Set an event handler. See http://developer.chrome.com/trunk/apps/socket.
@@ -321,7 +308,6 @@ function getStringOfArrayBuffer(buf) {
           console.log('TcpConnection(%d): calling recv from "on".', this.socketId);
           this._bufferedCallRecv();
         }
-        if(!this.pendingRead) this._read();
       }
     } else {
       console.error('TcpConnection(%d): no such event for on: %s',
@@ -339,7 +325,7 @@ function getStringOfArrayBuffer(buf) {
     var tmpBuf = this.pendingReadBuffer;
     this.pendingReadBuffer = null;
     this.callbacks.recv(tmpBuf);
-  }
+  };
 
   /**
    * Sends a message down the wire to the remote side
@@ -368,7 +354,7 @@ function getStringOfArrayBuffer(buf) {
       return;
     }
     var realCallback = callback || this.callbacks.sent || function() {};
-    socket.write(this.socketId, msg, realCallback);
+    socket.write(this.socketId, msg).done(realCallback);
   };
 
   /**
@@ -411,7 +397,7 @@ function getStringOfArrayBuffer(buf) {
       temp.set(new Uint8Array(buffer), this.pendingReadBuffer.byteLength);
       this.pendingReadBuffer = temp.buffer;
     }
-  }
+  };
 
   /**
    * Callback function for when data has been read from the socket.
@@ -422,31 +408,15 @@ function getStringOfArrayBuffer(buf) {
    * @private
    * @see TcpConnection.prototype.addDataReceivedListener
    * @param {Object} readInfo The incoming message.
+   * See freedom core.socket onData event.
    */
   TcpConnection.prototype._onRead = function(readInfo) {
-    // if we are disconnected, do nothing and stop reading.
-    if (readInfo.resultCode < 0) {
-      console.warn('TcpConnection(%d): resultCode: %d. Disconnecting',
-          this.socketId, readInfo.resultCode);
-      this.disconnect();
-      return;
-    } else if (readInfo.resultCode == 0) {
-      this.disconnect();
+    if (readInfo.socketId !== this.socketId) {
       return;
     }
-
-    if (this.callbacks.recv) {
+    if (this.callbacks.recv && this._initialized) {
       this._addPendingData(readInfo.data);
       this._bufferedCallRecv();
-
-      // We have to check this.callbacks.recv again becuase when it was called,
-      // it may have set this.callbacks.recv to null (e.g. to say we no longer
-      // want to recieve more data, or because we decided to disconnect)
-      if (this.callbacks.recv) {
-        this._read();
-      } else {
-        this.pendingRead = false;
-      }
     } else {
       // If we are not receiving more data at the moment, we store the received
       // data in a pendingReadBuffer for the next time this.callbacks.recv is
@@ -478,7 +448,7 @@ function getStringOfArrayBuffer(buf) {
       isConnected: this.isConnected,
       pendingReadBuffer: this.pendingReadBuffer,
       recvOptions: this.recvOptions,
-      pendingRead: this.pendingRead,
+      pendingRead: this.pendingRead
     };
   };
 

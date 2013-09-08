@@ -16,7 +16,7 @@ function sendStub(connection) {
   xhr.send(null);
 }
 
-function Server(address, port) {
+var Server = function(address, port) {
   window.current = this;
   this.tcpServer = new window.TcpServer(address || '127.0.0.1', port || 9009);
   this.tcpServer.on('listening', (function() {
@@ -99,8 +99,6 @@ var onload = function() {
   });
 
   freedom.emit('ready', {});
-  //socket.create('tcp');
 };
 
-//setTimeout(onload, 0);
 onload();

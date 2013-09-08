@@ -5,7 +5,9 @@
     "script": "manager.js"
   },
   "dependencies": {
-    "webserver": "common/webserver/webserver.json"
+    "webserver": {
+      "url": "common/webserver/webserver.json"
+    }
   },
   "permissions": [
   ]

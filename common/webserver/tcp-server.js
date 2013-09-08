@@ -1,8 +1,3 @@
-var window;
-if (!window) {
-  window = {};
-}
-window.socket = promise2callback(freedom['core.socket']());
 /*
 Copyright 2013 Google Inc.
 
@@ -58,7 +53,7 @@ function getStringOfArrayBuffer(buf) {
   var DEFAULT_MAX_CONNECTIONS = 50;
 
   // Define some local variables here.
-  var socket = window.socket || (typeof chrome != 'undefined' && chrome.socket);
+  var socket = exports.socket || (typeof chrome != 'undefined' && chrome.socket);
 
   /**
    * Create an instance of the server
@@ -171,6 +166,7 @@ function getStringOfArrayBuffer(buf) {
    */
   TcpServer.prototype.disconnect = function() {
     if (this.serverSocketId) {
+      console.log(this.serverSocketId);
       socket.disconnect(this.serverSocketId);
       socket.destroy(this.serverSocketId);
     }
@@ -179,11 +175,9 @@ function getStringOfArrayBuffer(buf) {
         this.openConnections[i].disconnect();
         this.removeFromServer(this.openConnections[i]);
       } catch (ex) {
-        console.log(ex);
+        console.warn(ex);
       }
     }
-    //socket.disconnect(serverSocketId);
-    //socket.destroy(serverSocketId);
     this.serverSocketId = 0;
     this.isListening = false;
     this.callbacks.disconnect && this.callbacks.disconnect();
@@ -205,7 +199,8 @@ function getStringOfArrayBuffer(buf) {
         this._onListenComplete.bind(this));
       this.isListening = true;
     } else {
-      console.error('TcpServer: create socket failed for '+this.addr+':'+this.port);
+      console.error('TcpServer: create socket failed for %s:%d',
+        this.addr, this.port);
     }
   };
 
@@ -221,7 +216,8 @@ function getStringOfArrayBuffer(buf) {
       socket.accept(this.serverSocketId, this._onAccept.bind(this));
       this.callbacks.listening && this.callbacks.listening();
     } else {
-      console.error('TcpServer: accept failed for '+this.addr+':'+this.port+'. Resultcode='+resultCode);
+      console.error('TcpServer: accept failed for %s:%d. Resultcode=%d',
+          this.addr, this.port, resultCode);
     }
   };
 
@@ -229,14 +225,13 @@ function getStringOfArrayBuffer(buf) {
     // continue to accept more connections:
     socket.accept(this.serverSocketId, this._onAccept.bind(this));
     var connectionsCount = Object.keys(this.openConnections).length;
-    console.log('TcpServer: this.openConnections.length='+connectionsCount);
-    console.log(this);
+    console.log('TcpServer: this.openConnections.length=' + connectionsCount);
 
     if (resultInfo.resultCode === 0) {
       if (connectionsCount >= this.maxConnections) {
         socket.disconnect(resultInfo.socketId);
         socket.destroy(resultInfo.socketId);
-        console.warn('TcpServer: too many connections: '+connectionsCount);
+        console.warn('TcpServer: too many connections: ' + connectionsCount);
         // TODO: make a callback for this case.
         //this._onNoMoreConnectionsAvailable(resultInfo.socketId);
         return;
@@ -245,7 +240,8 @@ function getStringOfArrayBuffer(buf) {
       this._createTcpConnection(resultInfo.socketId);
       console.log('TcpServer: Incoming connection created.');
     } else {
-      console.error('TcpServer: Incoming connection failure: '+resultInfo.resultCode);
+      console.error('TcpServer: Incoming connection failure: ' +
+          resultInfo.resultCode);
     }
   };
 
@@ -287,7 +283,8 @@ function getStringOfArrayBuffer(buf) {
     this.callbacks.created(this);
 
     if(this.callbacks.recv) {
-      console.log('TcpConnection('+this.socketId+'): calling _read from TcpConnection.');
+      console.log('TcpConnection(%d): calling _read from TcpConnection.',
+          this.socketId);
       this._read();
     }
   };
@@ -321,13 +318,14 @@ function getStringOfArrayBuffer(buf) {
         else { this.recvOptions = null; }
 
         if (this.pendingReadBuffer) {
-          console.log('TcpConnection('+this.socketId+'): calling recv from "on".');
+          console.log('TcpConnection(%d): calling recv from "on".', this.socketId);
           this._bufferedCallRecv();
         }
         if(!this.pendingRead) this._read();
       }
     } else {
-      console.error('TcpConnection('+this.socketId+'): no such event for on: '+eventName);
+      console.error('TcpConnection(%d): no such event for on: %s',
+          this.socketId, eventName);
     }
   };
 
@@ -365,7 +363,8 @@ function getStringOfArrayBuffer(buf) {
    */
   TcpConnection.prototype.sendRaw = function(msg, callback) {
     if(!this.isConnected) {
-      console.warn('TcpConnection('+this.socketId+'): sendRaw when disconnected.');
+      console.warn('TcpConnection(%d): sendRaw when disconnected.',
+        this.socketId);
       return;
     }
     var realCallback = callback || this.callbacks.sent || function() {};
@@ -427,7 +426,8 @@ function getStringOfArrayBuffer(buf) {
   TcpConnection.prototype._onRead = function(readInfo) {
     // if we are disconnected, do nothing and stop reading.
     if (readInfo.resultCode < 0) {
-      console.log('TcpConnection('+this.socketId+'): resultCode: '+readInfo.resultCode+'. Disconnecting');
+      console.warn('TcpConnection(%d): resultCode: %d. Disconnecting',
+          this.socketId, readInfo.resultCode);
       this.disconnect();
       return;
     } else if (readInfo.resultCode == 0) {
@@ -437,7 +437,6 @@ function getStringOfArrayBuffer(buf) {
 
     if (this.callbacks.recv) {
       this._addPendingData(readInfo.data);
-      console.log('TcpConnection('+this.socketId+'): calling recv from _onRead.');
       this._bufferedCallRecv();
 
       // We have to check this.callbacks.recv again becuase when it was called,

@@ -2,6 +2,7 @@ var window;
 if (!window) {
   window = {};
 }
+window.socket = freedom['core.socket']();
 var WS_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 function sendStub(connection) {

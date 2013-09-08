@@ -10,5 +10,6 @@
     }
   },
   "permissions": [
+    "core.runtime"
   ]
 }

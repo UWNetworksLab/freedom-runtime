@@ -1,7 +1,7 @@
 window.freedomcfg = function(register) {
   //register("core.view", View_oauth);
   register("core.socket", Socket_chrome);
-  //register("core.storage", Storage_chrome);
+  register("core.runtime", Runtime_chrome);
 }
 
 //Start FreeDOM

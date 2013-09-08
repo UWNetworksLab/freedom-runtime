@@ -5,10 +5,9 @@
     "script": [
       "../misc/sha1.js", 
       "../misc/enc-base64-min.js", 
-      "../misc/util.js", 
+      "webserver.js",
       "tcp-server.js", 
-      "wsparser.js",
-      "webserver.js"
+      "wsparser.js"
     ]
   },
   "dependencies": {

@@ -52,7 +52,7 @@ Server.prototype._onRecv = function(connection, wsParser, buffer) {
     var wsKey = req['Sec-WebSocket-Key']+WS_MAGIC;
     var wsAccept = CryptoJS.SHA1(wsKey).toString(CryptoJS.enc.Base64);
     var header = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"+
-                 "Sec-WebSocket-Protocol: freedomv1\r\n"+
+                 //"Sec-WebSocket-Protocol: freedomv1\r\n"+
                  "Sec-WebSocket-Accept: "+wsAccept+"\r\n\r";
     //Note: connection.send automatically appends another \n
     connection.send(header);

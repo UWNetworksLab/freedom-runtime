@@ -1,0 +1,3 @@
+[submodule "common/freedom"]
+	path = common/freedom
+	url = git@github.com:UWNetworksLab/freedom.git

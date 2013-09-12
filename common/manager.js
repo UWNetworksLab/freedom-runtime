@@ -1,9 +1,23 @@
 var window = {};
 var webserver = freedom.webserver();
 var runtime = freedom['core.runtime']();
+var core = freedom.core();
+var apps = {};
 
 var onload = function() {
-  webserver.on('connection', function(channelInfo) {
+  webserver.on('message', function(channelInfo) {
+    var id = channelInfo.id;
+    if (channelInfo.type === 'new') {
+      apps[id] = new AppInstance(function(id, msg) {
+        webserver.emit('message', {'type': 'message', 'id': id, data: msg});
+      }.bind({}, id));
+    } else if (channelInfo.type === 'message') {
+      apps[id].onMessage(channelInfo.data);
+    } else { //close
+      apps[id].close();
+      delete apps[id];
+    }
+    console.log(JSON.stringify(channelInfo));
     // TODO: migrate the app to the extension.
   });
 

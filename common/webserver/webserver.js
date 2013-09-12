@@ -16,6 +16,11 @@ function sendStub(connection) {
   xhr.send(null);
 }
 
+var id = 0;
+var nextId = function() {
+  return id++;
+};
+
 var Server = function(address, port) {
   window.current = this;
   this.tcpServer = new window.TcpServer(address || '127.0.0.1', port || 9009);
@@ -28,21 +33,43 @@ var Server = function(address, port) {
   this.tcpServer.on('connection', this._onConnection.bind(this));
 }
 
+Server.prototype.connections = {};
+
 Server.prototype._onConnection = function(connection) {
   console.log('CONNECTED('+connection.socketId+') '+
               connection.socketInfo.peerAddress+':'+connection.socketInfo.peerPort);
-  var wsParser = new WebSocketParser();
-  connection.on('recv', this._onRecv.bind(this, connection, wsParser));
-  wsParser.on('begin', function() {});
-  wsParser.on('header', function(header) {
+  var parser = new WebSocketParser();
+  var id = nextId();
+  this.connections[id] = connection;
+  connection.on('recv', this._onRecv.bind(this, connection, parser));
+  parser.on('begin', function(id) {
+    freedom.emit('message', {
+      type: 'new',
+      id: id
+    });
+  }.bind({}, id));
+  parser.on('header', function(header) {
     console.log(JSON.stringify(header));
   });
-  wsParser.on('frame', function(data) {
-    console.log(getStringOfArrayBuffer(data));
-  });
+  parser.on('frame', function(id, data) {
+    var msg = JSON.parse(getStringOfArrayBuffer(data));
+    freedom.emit('message', {
+      type: 'message',
+      id: id,
+      data: msg
+    });
+  }.bind({}, id));
+
+  connection.on('disconnect', function(server, id) {
+    freedom.emit('message', {
+      type: 'destroy',
+      id: id
+    });
+    delete server.connections[id];
+  }.bind({}, this, id));
 };
 
-Server.prototype._onRecv = function(connection, wsParser, buffer) {
+Server.prototype._onRecv = function(connection, parser, buffer) {
   console.log('Socket '+connection.socketId+' got data');
   var reqStr = getStringOfArrayBuffer(buffer);
   var req = this.parseGet(reqStr);
@@ -56,10 +83,8 @@ Server.prototype._onRecv = function(connection, wsParser, buffer) {
                  "Sec-WebSocket-Accept: "+wsAccept+"\r\n\r";
     //Note: connection.send automatically appends another \n
     connection.send(header);
-    window.conn = connection;
-    window.wsparser = wsParser;
   } else {
-    wsParser.parse(buffer);
+    parser.parse(buffer);
   }
 };
 
@@ -90,6 +115,9 @@ var onload = function() {
       server = new Server(options.host, options.port);
       server.listen();
     }
+  });
+  freedom.on('message', function(msg) {
+    server.connections[msg.id].send(JSON.stringify(msg.data));
   });
   freedom.on('stop', function(data) {
     if (server) {

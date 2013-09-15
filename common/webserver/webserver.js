@@ -1,6 +1,5 @@
-var window;
 if (!window) {
-  window = {};
+  var window = {};
 }
 window.socket = freedom['core.socket']();
 var WS_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -111,13 +110,15 @@ var onload = function() {
   var server = null;
 
   freedom.on('start', function(options) {
+    console.log('freedom start');
     if (!server) {
       server = new Server(options.host, options.port);
       server.listen();
     }
   });
   freedom.on('message', function(msg) {
-    server.connections[msg.id].send(JSON.stringify(msg.data));
+    var outParser = new WebSocketParser();
+    server.connections[msg.id].send(outParser.wrap(JSON.stringify(msg.data)));
   });
   freedom.on('stop', function(data) {
     if (server) {

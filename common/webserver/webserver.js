@@ -118,7 +118,7 @@ var onload = function() {
   });
   freedom.on('message', function(msg) {
     var outParser = new WebSocketParser();
-    server.connections[msg.id].send(outParser.wrap(JSON.stringify(msg.data)));
+    server.connections[msg.id].sendRaw(outParser.wrap(JSON.stringify(msg.data)));
   });
   freedom.on('stop', function(data) {
     if (server) {

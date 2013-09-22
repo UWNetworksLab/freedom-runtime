@@ -29,8 +29,14 @@ Runtime_chrome.prototype.createApp = function(manifest, proxy, contination) {
 
 //Resolve resource://<url> urls.
 Runtime_chrome.prototype.runtimeResolver = function(manifest, url, deferred) {
+  var resource, mbase;
+
   if (manifest.indexOf("runtime://") === 0) {
-    console.log('asked to resolve file ' + url);
+    resource = manifest.substr(10).split('#');
+    mbase = resource[1];
+    this.app.config.resources.get(mbase, url).done(function(deferred, url) {
+      deferred.resolve(url);
+    }.bind(this, deferred));
     return true;
   }
   return false;

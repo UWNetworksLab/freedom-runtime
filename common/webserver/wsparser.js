@@ -79,6 +79,17 @@ WebSocketParser.prototype.emit = function(type, msg) {
   }
 };
 
+WebSocketParser.prototype._byteorder16 = function(val) {
+  return ((val & 0xFF) << 8) | ((val >> 8) & 0xFF);
+};
+
+WebSocketParser.prototype._byteorder32 = function(val) {
+  return ((val & 0xFF) << 24) |
+      ((val & 0xFF00) << 8) |
+      ((val >> 8) & 0xFF00) |
+      ((val >> 24) & 0xFF);
+};
+
 /**
  * Starts executing the parser loop.
  *
@@ -244,13 +255,13 @@ WebSocketParser.prototype.parseHeaderBytes = function(header, ab) {
     switch (header.length) {
         case WS_FLAGS.LENGTH_EXT:
             var chunk16 = new Uint16Array(ab.slice(0,2));
-            header.length = chunk16[0];
+            header.length = this._byteorder16(chunk16[0]);
             ab = ab.slice(2);
             break;
         
         case WS_FLAGS.LENGTH_EXT2:
             var chunk32 = new Uint32Array(ab.slice(0,4));
-            header.length = chunk32[1];
+            header.length = this._byteorder32(chunk32[1]);
             ab = ab.slice(8);
             break;
     }
@@ -337,6 +348,7 @@ WebSocketParser.prototype._wrapMedium = function(data) {
   buf[2] = (data.byteLength >> 8) & 0xff;
   buf[3] = data.byteLength & 0xff;
   buf = copyab(buf, data, 4);
+  return buf.buffer;
 };
 
 /**

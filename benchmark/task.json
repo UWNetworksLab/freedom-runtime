@@ -1,0 +1,7 @@
+{
+  "name": "Benchmark Task",
+  "description": "Page renderer for runtime execution",
+  "app": {
+    "script": "task.js"
+  }
+}

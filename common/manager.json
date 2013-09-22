@@ -2,11 +2,11 @@
   "name": "FreeDOM Manager",
   "description": "FreeDOM manager provides an interface between your apps and your devices.",
   "app": {
-    "script": ["appinstance.js", "manager.js"]
+    "script": ["freedom/src/util.js", "appinstance.js", "manager.js"]
   },
   "dependencies": {
     "webserver": {
-      "url": "common/webserver/webserver.json"
+      "url": "webserver/webserver.json"
     }
   },
   "permissions": [

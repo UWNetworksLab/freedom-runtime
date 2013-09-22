@@ -41,12 +41,6 @@ Server.prototype._onConnection = function(connection) {
   var id = nextId();
   this.connections[id] = connection;
   connection.on('recv', this._onRecv.bind(this, connection, parser));
-  parser.on('begin', function(id) {
-    freedom.emit('message', {
-      type: 'new',
-      id: id
-    });
-  }.bind({}, id));
   parser.on('header', function(header) {
     console.log(JSON.stringify(header));
   });
@@ -66,6 +60,11 @@ Server.prototype._onConnection = function(connection) {
     });
     delete server.connections[id];
   }.bind({}, this, id));
+
+  freedom.emit('message', {
+    type: 'new',
+    id: id
+  });
 };
 
 Server.prototype._onRecv = function(connection, parser, buffer) {
@@ -118,7 +117,8 @@ var onload = function() {
   });
   freedom.on('message', function(msg) {
     var outParser = new WebSocketParser();
-    server.connections[msg.id].sendRaw(outParser.wrap(JSON.stringify(msg.data)));
+    var wrap = outParser.wrap(JSON.stringify(msg.data));
+    server.connections[msg.id].sendRaw(wrap);
   });
   freedom.on('stop', function(data) {
     if (server) {

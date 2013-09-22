@@ -1,0 +1,10 @@
+{
+  "name": "Benchmark",
+  "description": "Benchmark for runtime performance",
+  "app": {
+    "script": "main.js"
+  },
+  "permissions": [
+    "core.runtime"
+  ]
+}

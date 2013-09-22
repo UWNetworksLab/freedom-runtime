@@ -3,13 +3,24 @@ var webserver = freedom.webserver();
 var runtime = freedom['core.runtime']();
 var core = freedom.core();
 var apps = {};
+var manifests = {};
 
 var onload = function() {
+  runtime.on('needFile', function(manifest) {
+    if (manifests[manifest[0]]) {
+      manifests[manifest[0]].resolve(manifest[0], manifest[1]);
+    }
+  });
+  
   webserver.on('message', function(channelInfo) {
     var id = channelInfo.id;
     if (channelInfo.type === 'new') {
       apps[id] = new AppInstance(function(id, source, msg) {
-        webserver.emit('message', {'type': 'message', 'id': id, data: [source, msg]});
+        webserver.emit('message', {
+            'type': 'message',
+            'id': id, 
+            data: [source, msg]
+        });
       }.bind({}, id));
     } else if (channelInfo.type === 'message') {
       apps[id].onMessage(channelInfo.data[0], channelInfo.data[1]);

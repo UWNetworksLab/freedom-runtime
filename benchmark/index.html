@@ -7,11 +7,19 @@
     </script>
     <script type='text/javascript'>
       freedom.on('rate', function(r) {
-        document.body.innerHTML = 'Rendering ' + r + ' pages / second';
+        document.getElementById('status').innerHTML = 'Rendering ' + r + ' pages / second';
+      });
+      window.addEventListener('load', function() {
+        document.getElementById('stop').addEventListener('click', function() {
+          freedom.emit('stop');
+        });
       });
     </script>
   </head>
   <body>
-    Loading...
+    <span id='status'>
+      Loading...
+    </span>
+    <button id='stop'>Stop</button>
   </body>
 </html>

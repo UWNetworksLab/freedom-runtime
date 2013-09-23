@@ -5,6 +5,11 @@
             src='../common/freedom/freedom.js'
             data-manifest='benchmark.json'>
     </script>
+    <script type='text/javascript'>
+      freedom.on('rate', function(r) {
+        document.body.innerHTML = 'Rendering ' + r + ' pages / second';
+      });
+    </script>
   </head>
   <body>
     Loading...

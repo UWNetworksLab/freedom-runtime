@@ -35,7 +35,6 @@ AppInstance.prototype.onMessage = function(source, msg) {
     this.channel = msg.channel;
     this.config = msg.config;
   } else if (source === 'runtime' && msg.response === 'load') {
-    console.log("Resolved data for " + msg.file);
     runtime.resolve(msg.file, msg.data);
   } else if (source === 'control' && msg.type ==='createLink') {
     this.proxyChannel = msg.channel;
@@ -44,9 +43,26 @@ AppInstance.prototype.onMessage = function(source, msg) {
       type: 'bindChannel',
       channel: msg.reverse
     });
+  } else if (source === 'runtime' && msg.request === 'message') {
+    console.log('got msg: ' + JSON.stringify(msg));
+    this.runtimes[msg.id].emit(msg.data[0], msg.data[1]);
   } else if (source === 'runtime' && msg.request ==='createApp') {
     this.registerManifest(msg.from);
-    runtime.createApp("runtime://" + msg.from + "#" + msg.to, msg.channel);
+    core.createChannel().done(function(info) {
+      info.channel.done(function(chan) {
+        console.log('runtime now knows about ' + msg.id);
+        this.runtimes[msg.id] = chan;
+        chan.on(function(id, flow, msg) {
+          this.postMessage('runtime', {
+            request: 'message',
+            id: id,
+            data: [flow, msg]
+          });
+          return false;
+        }.bind(this, msg.id));
+      }.bind(this));
+      runtime.createApp("runtime://" + msg.from + "#" + msg.to, info.identifier);
+    }.bind(this))
   } else {
     console.log('Got unknown thing!', msg);
   }

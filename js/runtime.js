@@ -19,11 +19,11 @@ var Runtime_chrome = function(app) {
 
 Runtime_chrome.prototype.createApp = function(manifest, proxy, contination) {
   this.app.emit(this.app.controlChannel, {
-    type: 'Runtime App @ custom-' + proxy[0] + '.' + proxy[1],
-    name: 'custom-' + proxy[0] + proxy[1],
-    request: 'port',
-    service: 'App',
-    args: manifest
+    type: 'RuntimeApp',
+    request: 'bindapp',
+    to: proxy[0],
+    port: proxy[1],
+    id: manifest
   });
 };
 
@@ -54,7 +54,6 @@ Runtime_chrome.prototype.runtimeRetriever = function(url, deferred) {
 
 Runtime_chrome.prototype.resolve = function(file, data, continuation) {
   if (this.outstandingWork[file]) {
-    console.log('yay');
     this.outstandingWork[file].resolve(data);
     delete this.outstandingWork[file];
   }

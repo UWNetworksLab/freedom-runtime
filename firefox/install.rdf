@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>e619fbda-3677-4498-8c54-e31fe7c820a2</em:id>
+    <em:version>1.0</em:version>
+    <em:type>2</em:type>
+   
+    <!-- Target Application this extension can install into, 
+         with minimum and maximum supported versions. --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>20</em:minVersion>
+      </Description>
+    </em:targetApplication>
+   
+    <!-- Front End MetaData -->
+    <em:name>Freedom Runtime</em:name>
+    <em:description>Freedom runtime environment.</em:description>
+    <em:creator>University of Washington Networks Lab</em:creator>
+    <em:homepageURL>cs.washington.edu</em:homepageURL>
+  </Description>      
+</RDF>

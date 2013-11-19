@@ -20,11 +20,13 @@ var minimatch = require("minimatch");
 //NOTE: Keep all exclusion paths ('!' prefix) at the end of the array
 var chrome_files = [
   'common/**',
-  '!common/freedom/node_modules/**'
+  '!common/freedom/node_modules/**',
+  '!common/freedom/demo/**'
 ];
 var firefox_files = [
   'common/**',
-  '!common/freedom/node_modules/**'
+  '!common/freedom/node_modules/**',
+  '!common/freedom/demo/**'
 ];
 
 
@@ -60,13 +62,24 @@ module.exports = function(grunt) {
         options: {stdout: true, stderr: true, failOnError: true, execOptions: {cwd: 'common/freedom'}}
       }
     },
+    compress: {
+      xpi: {
+        options: {
+          archive: 'firefox-runtime.xpi',
+          mode: 'zip'
+        },
+        files: [{expand:true,  src: '**', cwd: 'firefox'}]
+      }
+    },
     clean: ['chrome/common/**',
-            'firefox/common/**']
+            'firefox/common/**',
+            'firefox-runtime.xpi']
   });
 
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-shell');
 
@@ -102,8 +115,8 @@ module.exports = function(grunt) {
     'copy:firefox'
   ]);
   grunt.registerTask('xpi', [
-    'build_firefox'
-    // TODO: generate xpi
+    'build_firefox',
+    'compress:xpi'
   ]);
   grunt.registerTask('build', [
     'build_chrome',

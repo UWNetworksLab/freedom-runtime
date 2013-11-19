@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<overlay id="freedom-runtime-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:html="http://www.w3.org/1999/xhtml">
+  
+  <script id="freedom-overlay" type="application/x-javascript" src="chrome://freedom-runtime/content/overlay.js"/>
+  <!-- <script type="application/x-javascript" data-manifest="chrome://freedom-runtime-common/content/manager.json" src="chrome://freedom-runtime-common/content/freedom/freedom.js">{"strongIsolation": true, "stayLocal": true}</script> -->
+
+  <!-- <script type="application/x-javascript" data-manifest="chrome://freedom-runtime-common/content/manager.json" src="chrome://freedom-runtime-common/content/freedom/freedom.js" defer="defer"></script> -->
+</overlay>

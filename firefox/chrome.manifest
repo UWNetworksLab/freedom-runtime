@@ -1,4 +1,4 @@
-resource freedom-runtime modules/
 content  freedom-runtime chrome/content/
+content  freedom-runtime-common common/
 
-overlay  chrome://browser/content/browser.xul   chrome://freedom-runtime/content/overlay.xul
+overlay  chrome://browser/content/browser.xul   chrome://freedom-runtime/content/browser-overlay.xul

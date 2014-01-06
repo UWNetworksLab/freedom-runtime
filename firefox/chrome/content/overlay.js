@@ -1,5 +1,8 @@
-window.addEventListener('load', function loadFreedom() {
-  // Freedom must run after the window has loaded because the
+if (typeof org === 'undefined') var org = {};
+if (!org.freedomos) org.freedomos = {};
+
+org.freedomos.loadFreedom = function() {
+ // Freedom must run after the window has loaded because the
   // data-manifest attribute isn't loaded yet, so we load freedom
   // dynamically.
   // This is a pretty nasty hack. For some reason appending a script
@@ -20,5 +23,13 @@ window.addEventListener('load', function loadFreedom() {
   // increase timeout to open debugger in time!
   setTimeout(function() {
   mozIJSSubScriptLoader.loadSubScript('chrome://freedom-runtime-common/content/freedom/freedom.js');
-  }, 0);
+  }, 10000);
+};
+
+window.addEventListener('load', function loadFreedom() {
+  window.freedomcfg = function(register) {
+    register('core.socket', org.freedomos.Socket_firefox);
+    register('core.runtime', org.freedomos.Runtime_firefox);
+  };
+  org.freedomos.loadFreedom();
 }, false);

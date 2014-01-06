@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "default_locale": "en",
   "icons": {
-      "128":"icon-128.png"
+      "128":"common/ui/icon-128.png"
   },
   "app": {
     "background": {

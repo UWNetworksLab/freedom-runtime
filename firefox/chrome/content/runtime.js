@@ -12,7 +12,6 @@ if (!org.freedomos) org.freedomos = {};
    */
   var Runtime_firefox = function(app) {
     console.log('constructing Runtime_firefox');
-    debugger;
     this.app = app;
     this.outstandingWork = {};
 

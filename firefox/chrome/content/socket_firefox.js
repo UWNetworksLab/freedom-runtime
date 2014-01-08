@@ -16,7 +16,6 @@ if (!org.freedomos) org.freedomos = {};
    * @private
    */
   var Socket_firefox = function(channel) {
-    debugger;
     this.sid = null;
     this._socketIdCount = 1;
     this._sockets = {};
@@ -98,8 +97,16 @@ if (!org.freedomos) org.freedomos = {};
       this.dispatchEvent({serverSocketId: socketId,
                          clientSocketId: newSocketId});
     }.bind(this);
-    serverSocket.listen();
-    continuation();
+
+    var listenResult = -2;
+    try {
+      serverSocket.listen();
+      listenResult = 0;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      continuation(listenResult);
+    }
   };
 
   Socket_firefox.prototype.getInfo = function(socketId, continuation) {
